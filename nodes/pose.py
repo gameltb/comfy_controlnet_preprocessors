@@ -3,6 +3,7 @@ if not skip_v1:
     from ..v1 import openpose_v1
 from ..v11 import openpose_v11
 from .. import mp_pose_hand
+from ..v11 import dwpose
 
 class OpenPose_Preprocessor:
     @classmethod
@@ -48,8 +49,23 @@ class Media_Pipe_Hand_Pose_Preprocessor:
     def detect(self, image, detect_pose, detect_hands):
         np_detected_map = common_annotator_call(mp_pose_hand.apply_mediapipe, image, detect_pose == "enable", detect_hands == "enable")
         return (img_np_to_tensor(np_detected_map),)
+    
+class DWPose_Preprocessor:
+    @classmethod
+    def INPUT_TYPES(s):
+        ret = {"required": { "image": ("IMAGE", ),}}
+        return ret
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "estimate_pose"
 
+    CATEGORY = "preprocessors/pose"
+
+    def estimate_pose(self, image):
+        np_detected_map = common_annotator_call(dwpose.DWposeDetector(), image)
+        return (img_np_to_tensor(np_detected_map),)
+    
 NODE_CLASS_MAPPINGS = {
-    "OpenposePreprocessor": OpenPose_Preprocessor,
+    "OpenposePreprocessor": OpenPose_Preprocessor,    
+    "DWPosePreprocessor": DWPose_Preprocessor,
     "MediaPipe-HandPosePreprocessor": Media_Pipe_Hand_Pose_Preprocessor
 }
